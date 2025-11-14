@@ -105,7 +105,7 @@ export const updateProduk = async (req, res) => {
     }
 };
 
-export const deleteProduk = async (req, res) => {
+export const softDeleteProduk = async (req, res) => {
     try {
         const produk = await Produk.findByIdAndUpdate(
             req.params.id,
