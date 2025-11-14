@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const produkSchema = new mongoose.Schema({
     kode_produk: { type: String, required: true, unique: true },
+    prefix: { type: String, default: "PRD" },
     nama: { type: String, required: true },
     deskripsi: { type: String },
     kategori_id: { type: mongoose.Schema.Types.ObjectId, ref: "Kategori" },

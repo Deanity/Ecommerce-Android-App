@@ -1,7 +1,6 @@
 import Produk from "../models/produk.js";
 
 export const generateKodeProduk = async (prefix = "PRD") => {
-    // Cari produk dengan prefix terkait
     const lastProduct = await Produk.findOne({ kode_produk: new RegExp(`^${prefix}-`) })
         .sort({ kode_produk: -1 });
 

@@ -2,28 +2,23 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// 🔧 Fungsi bantu buat generate JWT
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: "7d", // token berlaku 7 hari
+        expiresIn: "7d", 
     });
 };
 
-// 🧍‍♂️ Register user baru
 export const registerUser = async (req, res) => {
     try {
         const { nama, email, password, no_hp, alamat } = req.body;
 
-        // cek apakah user sudah ada
         const existingUser = await User.findOne({ email });
         if (existingUser) {
         return res.status(400).json({ success: false, message: "Email sudah terdaftar" });
         }
 
-        // enkripsi password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // buat user baru
         const newUser = await User.create({
             nama,
             email,
@@ -49,18 +44,15 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// 🔑 Login user
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // cari user berdasarkan email
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ success: false, message: "User tidak ditemukan" });
         }
 
-        // cocokkan password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: "Password salah" });
@@ -83,7 +75,6 @@ export const loginUser = async (req, res) => {
     }
 };
 
-// 👤 Ambil data profil user (hanya untuk user login)
 export const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select("-password");
@@ -97,7 +88,6 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
-// ⚙️ Update profil user
 export const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
