@@ -1,12 +1,6 @@
 import User from "../models/user.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-
-const generateToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: "7d", 
-    });
-};
+import { generateToken } from "../utils/generateToken.js";
+import { hashPassword, comparePassword } from "../utils/hashPassword.js";
 
 export const registerUser = async (req, res) => {
     try {
@@ -14,10 +8,13 @@ export const registerUser = async (req, res) => {
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-        return res.status(400).json({ success: false, message: "Email sudah terdaftar" });
+            return res.status(400).json({
+                success: false,
+                message: "Email sudah terdaftar",
+            });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hashPassword(password);
 
         const newUser = await User.create({
             nama,
@@ -28,15 +25,15 @@ export const registerUser = async (req, res) => {
         });
 
         res.status(201).json({
-        success: true,
-        message: "Registrasi berhasil",
-        user: {
-            id: newUser._id,
-            nama: newUser.nama,
-            email: newUser.email,
-            role: newUser.role,
-        },
-        token: generateToken(newUser._id),
+            success: true,
+            message: "Registrasi berhasil",
+            user: {
+                id: newUser._id,
+                nama: newUser.nama,
+                email: newUser.email,
+                role: newUser.role,
+            },
+            token: generateToken(newUser._id),
         });
     } catch (error) {
         console.error("Register error:", error);
@@ -50,24 +47,30 @@ export const loginUser = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ success: false, message: "User tidak ditemukan" });
+            return res.status(404).json({
+                success: false,
+                message: "User tidak ditemukan",
+            });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await comparePassword(password, user.password);
         if (!isMatch) {
-            return res.status(401).json({ success: false, message: "Password salah" });
+            return res.status(401).json({
+                success: false,
+                message: "Password salah",
+            });
         }
 
         res.status(200).json({
-        success: true,
-        message: "Login berhasil",
-        user: {
-            id: user._id,
-            nama: user.nama,
-            email: user.email,
-            role: user.role,
-        },
-        token: generateToken(user._id),
+            success: true,
+            message: "Login berhasil",
+            user: {
+                id: user._id,
+                nama: user.nama,
+                email: user.email,
+                role: user.role,
+            },
+            token: generateToken(user._id),
         });
     } catch (error) {
         console.error("Login error:", error);
@@ -78,10 +81,18 @@ export const loginUser = async (req, res) => {
 export const getUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select("-password");
+
         if (!user) {
-            return res.status(404).json({ success: false, message: "User tidak ditemukan" });
+            return res.status(404).json({
+                success: false,
+                message: "User tidak ditemukan",
+            });
         }
-        res.status(200).json({ success: true, user });
+
+        res.status(200).json({
+            success: true,
+            user,
+        });
     } catch (error) {
         console.error("Get profile error:", error);
         res.status(500).json({ success: false, message: "Terjadi kesalahan server" });
@@ -92,7 +103,10 @@ export const updateUserProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
         if (!user) {
-            return res.status(404).json({ success: false, message: "User tidak ditemukan" });
+            return res.status(404).json({
+                success: false,
+                message: "User tidak ditemukan",
+            });
         }
 
         user.nama = req.body.nama || user.nama;
@@ -101,7 +115,7 @@ export const updateUserProfile = async (req, res) => {
         user.alamat = req.body.alamat || user.alamat;
 
         if (req.body.password) {
-            user.password = await bcrypt.hash(req.body.password, 10);
+            user.password = await hashPassword(req.body.password);
         }
 
         const updatedUser = await user.save();
